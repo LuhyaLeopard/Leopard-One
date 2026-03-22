@@ -1,4 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prop Futures Earnings Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<!-- Your full, updated HTML content would be inserted here -->
-<!-- For brevity in this code example, the actual HTML content is omitted -->
-<!-- In practice, paste your full, working HTML including the added Cash Value Life Insurance option and updated PDF logic -->
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1f2937;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --warn: #f78166;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 0.4rem;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      box-shadow: var(--card-shadow);
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .card + .card { margin-top: 1.25rem; }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrap .prefix {
+      position: absolute;
+      left: 0.875rem;
+      color: var(--muted);
+      font-size: 1rem;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      padding: 0.625rem 0.875rem;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+
+    input[type="number"].has-prefix { padding-left: 1.75rem; }
+
+    input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
+
+    .split-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(63,185,80,0.12);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 20px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin-top: 0.5rem;
+    }
+
+    .split-badge svg { flex-shrink: 0; }
+
+    /* Results */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .result-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+
+    .result-item.highlight {
+      border-color: var(--accent);
+      background: rgba(88,166,255,0.07);
+    }
+
+    .result-item.highlight-green {
+      border-color: var(--accent2);
+      background: rgba(63,185,80,0.07);
+    }
+
+    .result-item .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .result-item .value {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .result-item.highlight .value { color: var(--accent); }
+    .result-item.highlight-green .value { color: var(--accent2); }
+
+    .result-item .sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.25rem 0;
+    }
+
+    /* Breakdown table */
+    .breakdown {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .breakdown th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0 0 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .breakdown th:last-child,
+    .breakdown td:last-child { text-align: right; }
+
+    .breakdown td {
+      padding: 0.55rem 0;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      color: var(--text);
+    }
+
+    .breakdown tr:last-child td { border-bottom: none; }
+
+    .breakdown .dim { color: var(--muted); }
+    .breakdown .pos { color: var(--accent2); font-weight: 600; }
+    .breakdown .neg { color: var(--warn); }
+
+    .note {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(88,166,255,0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .results-grid { grid-template-columns: 1fr; }
+      header h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Prop Futures Calculator</h1>
+  <p>Daily earnings target across funded accounts</p>
+</header>
+
+<!-- Inputs -->
+<div class="card">
+  <div class="card-title">Account Settings</div>
+
+  <div class="field">
+    <label for="goal">Monthly Income Goal (what you keep)</label>
+    <div class="input-wrap">
+      <span class="prefix">$</span>
+      <input type="number" id="goal" class="has-prefix" min="0" step="100" value="5000" placeholder="5000" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="accounts">Number of Accounts</label>
+    <div class="input-wrap">
+      <input type="number" id="accounts" min="1" step="1" value="3" placeholder="3" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="tradingDays">Trading Days per Month</label>
+    <div class="input-wrap">
+      <select id="tradingDays">
+        <option value="18">18 days (conservative)</option>
+        <option value="20" selected>20 days (standard)</option>
+        <option value="21">21 days</option>
+        <option value="22">22 days (full month)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="split-badge">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM7.25 5v3.5l3 1.75-.5.866-3.5-2V5h1z"/>
+    </svg>
+    80% profit split — you keep 80%, firm keeps 20%
+  </div>
+</div>
+
+<!-- Results -->
+<div class="card">
+  <div class="card-title">Results</div>
+
+  <div class="results-grid">
+    <div class="result-item highlight" id="res-daily-per-account">
+      <div class="label">Daily Target / Account</div>
+      <div class="value" id="val-daily-per">—</div>
+      <div class="sub">gross profit needed</div>
+    </div>
+    <div class="result-item highlight-green" id="res-daily-keep">
+      <div class="label">Daily You Keep / Account</div>
+      <div class="value" id="val-daily-keep">—</div>
+      <div class="sub">after 80% split</div>
+    </div>
+    <div class="result-item" id="res-monthly-gross">
+      <div class="label">Monthly Gross / Account</div>
+      <div class="value" id="val-monthly-gross">—</div>
+      <div class="sub">before split</div>
+    </div>
+    <div class="result-item" id="res-total-gross">
+      <div class="label">Total Monthly Gross</div>
+      <div class="value" id="val-total-gross">—</div>
+      <div class="sub">all accounts combined</div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <table class="breakdown">
+    <thead>
+      <tr>
+        <th>Line Item</th>
+        <th>Monthly</th>
+        <th>Daily</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Gross profit (all accounts)</td>
+        <td class="dim" id="b-gross-monthly">—</td>
+        <td class="dim" id="b-gross-daily">—</td>
+      </tr>
+      <tr>
+        <td>Firm's cut (20%)</td>
+        <td class="neg" id="b-firm-monthly">—</td>
+        <td class="neg" id="b-firm-daily">—</td>
+      </tr>
+      <tr>
+        <td><strong>Your net income</strong></td>
+        <td class="pos" id="b-net-monthly">—</td>
+        <td class="pos" id="b-net-daily">—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Tip:</strong> The daily gross target is what each account must generate in gross profit.
+    Trading fewer days requires higher daily targets — adjust the trading days field to explore scenarios.
+  </div>
+</div>
+
+<footer>Built for prop futures traders &mdash; 80/20 profit split model</footer>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function fmt(n) {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculate() {
+    const goal        = Math.max(0, parseFloat($('goal').value)        || 0);
+    const accounts    = Math.max(1, parseInt($('accounts').value)      || 1);
+    const tradingDays = Math.max(1, parseInt($('tradingDays').value)   || 20);
+
+    // User keeps 80%, so gross needed = goal / 0.80
+    const totalGrossMonthly  = goal / 0.80;
+    const grossPerAccount    = totalGrossMonthly / accounts;
+    const dailyGrossPerAcct  = grossPerAccount   / tradingDays;
+    const dailyKeepPerAcct   = dailyGrossPerAcct * 0.80;
+
+    const firmMonthly  = totalGrossMonthly * 0.20;
+    const firmDaily    = firmMonthly / tradingDays;
+    const netDaily     = goal / tradingDays;
+
+    $('val-daily-per').textContent   = fmt(dailyGrossPerAcct);
+    $('val-daily-keep').textContent  = fmt(dailyKeepPerAcct);
+    $('val-monthly-gross').textContent = fmt(grossPerAccount);
+    $('val-total-gross').textContent   = fmt(totalGrossMonthly);
+
+    $('b-gross-monthly').textContent = fmt(totalGrossMonthly);
+    $('b-gross-daily').textContent   = fmt(totalGrossMonthly / tradingDays);
+    $('b-firm-monthly').textContent  = '−' + fmt(firmMonthly);
+    $('b-firm-daily').textContent    = '−' + fmt(firmDaily);
+    $('b-net-monthly').textContent   = fmt(goal);
+    $('b-net-daily').textContent     = fmt(netDaily);
+  }
+
+  ['goal','accounts','tradingDays'].forEach(id => {
+    $(id).addEventListener('input', calculate);
+  });
+
+  calculate();
+</script>
+</body>
+</html>
